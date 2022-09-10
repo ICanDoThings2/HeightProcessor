@@ -23,6 +23,20 @@ std::map<std::string, fileCmdEnums> stringToEnumCMD{
 
 };
 
+fileCmdEnums checkParaCMDCommand(std::string asCMD) // A command with parameters, instead of just a plain one like update, info, etc.
+{
+   /*
+   * Don't blame me, C++ hates Switch statements that aren't enum or smthing.
+   */
+
+    if (asCMD.substr(0, 2).compare("cd") == 0)
+    {
+        return fileCmdEnums::changeDir;
+    }
+
+    return fileCmdEnums::invalid; // If we found no other case it fit.
+}
+
 fileCmdEnums checkCMDCommand( std::string asCMD )
 {
 
@@ -34,17 +48,92 @@ fileCmdEnums checkCMDCommand( std::string asCMD )
     }
     catch (const std::out_of_range& oor)
     {
-        std::cout << "No command of that name found!\n";
-        return fileCmdEnums::invalid;
+        return checkParaCMDCommand(asCMD);
     }
 
     return toReturn;
     
 }
 
+/*
+* Due to the way the data has been downloaded from the website, it's somethings only one file in a folder.
+* That's quite silly, so this removes it after renaming it if it's in valid format.
+*/
+
+void checkSingleFileFolder( std::filesystem::directory_entry asFolder )
+{
+    std::filesystem::directory_entry firstFile;
+    bool singleFile = true;
+
+    if ( asFolder.is_directory())
+    {
+        for (auto const& inCurDir : std::filesystem::directory_iterator{ asFile })
+        {
+            if ( !firstFile.exists() )
+            {
+                firstFile = inCurDir;
+                continue;
+            }
+            else // There was already a file there, therefore it isn't a single file folder.
+            {
+                singleFile = false;
+                return; // If it's not single file folder, no point doing anything here. End of the story.
+            }
+        }
+
+        asFolder.path().parent_path();
+    }
+}
+
+void updateDirFiles()
+{
+    int numFolders = 0;
+
+    if (std::filesystem::exists(curDir) && !curDir.empty())
+    {
+        for ( std::filesystem::directory_entry inCurDir : std::filesystem::directory_iterator{ curDir })
+        {
+            std::cout << std::filesystem::path(inCurDir).filename();
+            std::cout << "\n";
+
+            if ( inCurDir.is_directory() )
+            {
+                checkSingleFileFolder(inCurDir);
+            }
+        }
+    }
+}
+
+/*
+* This displays directory info, if the directory is valid and not empty.
+*/
+
+void showDirInfo()
+{
+    if ( std::filesystem::exists(curDir) && !curDir.empty())
+    {
+        for (auto const& inCurDir : std::filesystem::directory_iterator{ curDir })
+        {
+            std::cout << std::filesystem::path(inCurDir).filename();
+            std::cout << "\n";
+        }
+    }
+}
+
 void changeToDir(std::string asDir)
 {
+    curDir.assign(asDir);
 
+    if (std::filesystem::exists( curDir ))
+    {
+        curDir = asDir;
+        std::cout << "Dir set to " + asDir + "\n";
+    }
+    else
+    {
+        std::cout << asDir;
+        std::cout << " is an Invalid path!\n";
+    }
 }
 
 void getCMD()
@@ -53,27 +142,24 @@ void getCMD()
 
     std::string asCmd ("");
 
-    std::cin >> asCmd;
+    std::getline(std::cin, asCmd); // To-do, replace with getline.
 
     switch ( checkCMDCommand(asCmd) )
     {
         case fileCmdEnums::update:
-            std::cout << "Updating file names!\n";
+            updateDirFiles();
+            break;
+
+        case fileCmdEnums::info:
+            showDirInfo();
             break;
 
         case fileCmdEnums::changeDir:
             std::string newPath = asCmd.substr(3);
-
-            if (std::filesystem::exists(newPath))
-            {
-                curDir = newPath;
-            }
-            else
-            {
-                std::cout << "Path does not exist!";
-            }
-
+            changeToDir(newPath);
             break;
+
+        
 
 
     }
@@ -90,16 +176,7 @@ int main()
 
     std::cout << "Directory Not Set!\n";
 
-    /*for (const auto& file : )
-    {
-
-    }*/
-
     getCMD();
-
-
-
-
 }
 
 // Run program: Ctrl + F5 or Debug > Start Without Debugging menu
