@@ -18,9 +18,15 @@
     <ClCompile Include="heightmapProcessor.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="heightmapTile.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="heightmapProcessor.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="heightmapTile.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -130,9 +130,11 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="heightmapProcessor.cpp" />
+    <ClCompile Include="heightmapTile.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="heightmapProcessor.h" />
+    <ClInclude Include="heightmapTile.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

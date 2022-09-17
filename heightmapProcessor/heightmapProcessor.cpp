@@ -10,8 +10,9 @@
 #include <algorithm>
 #include <map>
 #include <vector>
+#include "heightmapTile.h"
 
-enum fileCmdEnums{ update, changeDir, info, invalid };
+enum fileCmdEnums{ update, changeDir, info, invalid, quit, singleFileDir };
 
 std::filesystem::path curDir;
 
@@ -19,6 +20,7 @@ std::map<std::string, fileCmdEnums> stringToEnumCMD{
     {"update", fileCmdEnums::update}, 
     {"changeDir", fileCmdEnums::changeDir},
     {"cd", fileCmdEnums::changeDir},
+    {"sf", fileCmdEnums::singleFileDir},
     {"info", fileCmdEnums::info} // Not sure this is the best name for it, since it's going to summarize a bunch of data.
 
 };
@@ -55,19 +57,56 @@ fileCmdEnums checkCMDCommand( std::string asCMD )
     
 }
 
+
+
+bool isXMLFile(std::filesystem::path forPath)
+{
+    if (forPath.has_extension())
+    {
+        return forPath.extension().string().compare("\".xml\"");
+    }
+    
+    return false;
+}
+
+void makeTileOfFile(std::filesystem::directory_entry asFile)
+{
+
+    if ( isXMLFile( asFile.path() ) )
+    {
+
+    }
+
+    return;
+}
+
+void renameFile( std::filesystem::directory_entry asFile )
+{
+    std::ifstream readingFile(asFile.path(), std::ifstream::in);
+
+    std::string curLine;
+    while (std::getline(readingFile, curLine))
+    {
+
+    }
+
+}
+
+
+
 /*
 * Due to the way the data has been downloaded from the website, it's somethings only one file in a folder.
 * That's quite silly, so this removes it after renaming it if it's in valid format.
 */
 
-void checkSingleFileFolder( std::filesystem::directory_entry asFolder )
+bool bSingleFileFolder( std::filesystem::directory_entry asFolder )
 {
     std::filesystem::directory_entry firstFile;
     bool singleFile = true;
 
     if ( asFolder.is_directory())
     {
-        for (auto const& inCurDir : std::filesystem::directory_iterator{ asFile })
+        for (auto const& inCurDir : std::filesystem::directory_iterator{ asFolder })
         {
             if ( !firstFile.exists() )
             {
@@ -77,12 +116,19 @@ void checkSingleFileFolder( std::filesystem::directory_entry asFolder )
             else // There was already a file there, therefore it isn't a single file folder.
             {
                 singleFile = false;
-                return; // If it's not single file folder, no point doing anything here. End of the story.
+                return false; // If it's not single file folder, no point doing anything here. End of the story.
             }
         }
 
         asFolder.path().parent_path();
     }
+
+    return true;
+}
+
+void renameToCoords()
+{
+
 }
 
 void updateDirFiles()
@@ -93,12 +139,9 @@ void updateDirFiles()
     {
         for ( std::filesystem::directory_entry inCurDir : std::filesystem::directory_iterator{ curDir })
         {
-            std::cout << std::filesystem::path(inCurDir).filename();
-            std::cout << "\n";
-
-            if ( inCurDir.is_directory() )
+            if ( bSingleFileFolder(inCurDir ) )
             {
-                checkSingleFileFolder(inCurDir);
+
             }
         }
     }
@@ -146,20 +189,28 @@ void getCMD()
 
     switch ( checkCMDCommand(asCmd) )
     {
-        case fileCmdEnums::update:
-            updateDirFiles();
-            break;
 
         case fileCmdEnums::info:
+        {
             showDirInfo();
             break;
+        }
+
+        case fileCmdEnums::update:
+        {
+            updateDirFiles();
+            break;
+        }
 
         case fileCmdEnums::changeDir:
+        {
             std::string newPath = asCmd.substr(3);
             changeToDir(newPath);
             break;
+        }
 
-        
+        default:
+            break;
 
 
     }
@@ -177,6 +228,9 @@ int main()
     std::cout << "Directory Not Set!\n";
 
     getCMD();
+
+
+
 }
 
 // Run program: Ctrl + F5 or Debug > Start Without Debugging menu
