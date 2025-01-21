@@ -131,10 +131,13 @@
   <ItemGroup>
     <ClCompile Include="heightmapProcessor.cpp" />
     <ClCompile Include="heightmapTile.cpp" />
+    <ClCompile Include="pugixml.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="heightmapProcessor.h" />
     <ClInclude Include="heightmapTile.h" />
+    <ClInclude Include="pugiconfig.hpp" />
+    <ClInclude Include="pugixml.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

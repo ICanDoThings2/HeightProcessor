@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include "pugixml.hpp"
 
 class heightmapTile
 {
@@ -23,6 +24,8 @@ protected:
 	heightmapTile *westCell, *eastCell, *southCell, *northCell;
 
 public:
+
+	heightmapTile(pugi::xml_document fromDoc);
 
 	void setNECorner(double asLat, double asLong);
 

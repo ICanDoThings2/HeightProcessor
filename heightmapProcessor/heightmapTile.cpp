@@ -1,5 +1,7 @@
 #include "heightmapTile.h"
 
+heightmapTile(pugi::xml_document fromDoc);
+
 /*
 * This sets the upper right, North East corner of a tile.
 */

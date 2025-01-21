@@ -3,6 +3,7 @@
 // Should use the latest version of C++.
 //
 
+#include "pugixml.hpp"
 #include <fstream>
 #include <iostream>
 #include <string>
@@ -11,6 +12,8 @@
 #include <map>
 #include <vector>
 #include "heightmapTile.h"
+
+pugi::xml_document baseDoc; 
 
 enum fileCmdEnums{ update, changeDir, info, invalid, quit, singleFileDir };
 
@@ -21,14 +24,15 @@ std::map<std::string, fileCmdEnums> stringToEnumCMD{
     {"changeDir", fileCmdEnums::changeDir},
     {"cd", fileCmdEnums::changeDir},
     {"sf", fileCmdEnums::singleFileDir},
-    {"info", fileCmdEnums::info} // Not sure this is the best name for it, since it's going to summarize a bunch of data.
+    {"info", fileCmdEnums::info}, // Not sure this is the best name for it, since it's going to summarize a bunch of data.
+    {"quit", fileCmdEnums::quit}
 
 };
 
 fileCmdEnums checkParaCMDCommand(std::string asCMD) // A command with parameters, instead of just a plain one like update, info, etc.
 {
    /*
-   * Don't blame me, C++ hates Switch statements that aren't enum or smthing.
+   * Don't blame me, C++ hates Switch statements that aren't enum or something.
    */
 
     if (asCMD.substr(0, 2).compare("cd") == 0)
@@ -61,7 +65,7 @@ fileCmdEnums checkCMDCommand( std::string asCMD )
 
 bool isXMLFile(std::filesystem::path forPath)
 {
-    if (forPath.has_extension())
+    if (forPath.has_extension()) // I think this was due to if I just had the condition before it would throw false or something were there not an extension.
     {
         return forPath.extension().string().compare("\".xml\"");
     }
@@ -120,30 +124,85 @@ bool bSingleFileFolder( std::filesystem::directory_entry asFolder )
             }
         }
 
-        asFolder.path().parent_path();
     }
 
     return true;
 }
 
-void renameToCoords()
+std::string XMLCoordsCenter( std::filesystem::directory_entry )
+{
+    std::string Center = "";
+
+    return Center;
+}
+
+void outputChildNodes(pugi::xml_node tNode)
 {
 
+    if (tNode.children().empty())
+    {
+        std::cout << tNode.name(); std::cout << " is childless, attributes; \n";
+
+        for (auto tAttr : tNode.attributes())
+        {
+            std::cout << tAttr.name(); std::cout << "\n";
+
+        }
+
+        return;
+    }
+
+    for (pugi::xml_node tChild : tNode.children())
+    {
+
+
+        std::cout << tChild.name(); std::cout << "\n";
+        outputChildNodes(tChild);
+    }
 }
+
+
+void outputAllNodes(pugi::xml_document &toOutput)
+{
+    for (auto tChild : toOutput.children()) 
+    {
+        outputChildNodes(tChild);
+    }
+}
+
+/*
+Planned to update the current directory. 
+It should move single files from a folder up to their parent directory if they're the only ones present then delete said folder.
+Though if I simply extract the string of zips it should simply do that anyways so maybe that will be left out.
+It should also rename the files to have their coordinates center too for simplicity.
+*/
 
 void updateDirFiles()
 {
     int numFolders = 0;
+   
 
     if (std::filesystem::exists(curDir) && !curDir.empty())
     {
         for ( std::filesystem::directory_entry inCurDir : std::filesystem::directory_iterator{ curDir })
         {
-            if ( bSingleFileFolder(inCurDir ) )
+            if (isXMLFile(inCurDir))
             {
+
+                pugi::xml_document tDoc;
+                pugi::xml_parse_result loadResult = tDoc.load_file( std::filesystem::absolute( inCurDir.path() ).c_str() );
+                outputAllNodes(tDoc);
+                // if (loadResult.status == pugi::xml_parse_status::status_ok) { std::cout << "Load success\n"; }
+
+                break;
+
 
             }
         }
+
+        
+
+
     }
 }
 
@@ -209,6 +268,9 @@ void getCMD()
             break;
         }
 
+        case fileCmdEnums::quit:
+            return;
+
         default:
             break;
 
@@ -223,7 +285,7 @@ void getCMD()
 
 int main()
 {
-    std::filesystem::path;
+
 
     std::cout << "Directory Not Set!\n";
 
