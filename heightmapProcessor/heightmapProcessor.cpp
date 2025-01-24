@@ -73,16 +73,7 @@ bool isXMLFile(std::filesystem::path forPath)
     return false;
 }
 
-void makeTileOfFile(std::filesystem::directory_entry asFile)
-{
 
-    if ( isXMLFile( asFile.path() ) )
-    {
-
-    }
-
-    return;
-}
 
 void renameFile( std::filesystem::directory_entry asFile )
 {
@@ -136,40 +127,6 @@ std::string XMLCoordsCenter( std::filesystem::directory_entry )
     return Center;
 }
 
-void outputChildNodes(pugi::xml_node tNode)
-{
-
-    if (tNode.children().empty())
-    {
-        std::cout << tNode.name(); std::cout << " is childless, attributes; \n";
-
-        for (auto tAttr : tNode.attributes())
-        {
-            std::cout << tAttr.name(); std::cout << "\n";
-
-        }
-
-        return;
-    }
-
-    for (pugi::xml_node tChild : tNode.children())
-    {
-
-
-        std::cout << tChild.name(); std::cout << "\n";
-        outputChildNodes(tChild);
-    }
-}
-
-
-void outputAllNodes(pugi::xml_document &toOutput)
-{
-    for (auto tChild : toOutput.children()) 
-    {
-        outputChildNodes(tChild);
-    }
-}
-
 /*
 Planned to update the current directory. 
 It should move single files from a folder up to their parent directory if they're the only ones present then delete said folder.
@@ -180,6 +137,8 @@ It should also rename the files to have their coordinates center too for simplic
 void updateDirFiles()
 {
     int numFolders = 0;
+
+    std::vector<heightmapTile> processedTiles; 
    
 
     if (std::filesystem::exists(curDir) && !curDir.empty())
@@ -189,20 +148,20 @@ void updateDirFiles()
             if (isXMLFile(inCurDir))
             {
 
+                std::cout << inCurDir.path(); std::cout << "\n";
+
                 pugi::xml_document tDoc;
                 pugi::xml_parse_result loadResult = tDoc.load_file( std::filesystem::absolute( inCurDir.path() ).c_str() );
-                outputAllNodes(tDoc);
-                // if (loadResult.status == pugi::xml_parse_status::status_ok) { std::cout << "Load success\n"; }
+
+                if (loadResult.status == pugi::status_ok)
+                {
+                    std::cout << "Load good!\n";
+                    heightmapTile tTile = heightmapTile( &tDoc );
+                }
 
                 break;
-
-
             }
         }
-
-        
-
-
     }
 }
 

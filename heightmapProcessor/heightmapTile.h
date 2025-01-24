@@ -3,12 +3,32 @@
 #include <algorithm>
 #include <cmath>
 #include "pugixml.hpp"
+#include <vector>
+#include <cstdint>
 
 class heightmapTile
 {
 
 	
 protected:
+
+	std::vector<std::string> usedNames{
+		"gml:lowerCorner",
+		"gml:upperCorner",
+		"gml:low",
+		"gml:high",
+		"gml:axisLabels",
+		"gml:tupleList",
+		"gml:sequenceRule",
+		"gml:startPoint"
+	};
+
+
+	void parseNodes(pugi::xml_node thisNode);
+	void parseAllNodes(pugi::xml_document* parsing);
+
+	
+
 
 	/*
 	* These two coordinate pairs are for the Southewest and Northest corners of a map, respectively.
@@ -25,7 +45,7 @@ protected:
 
 public:
 
-	heightmapTile(pugi::xml_document fromDoc);
+	heightmapTile(pugi::xml_document *fromDoc);
 
 	void setNECorner(double asLat, double asLong);
 

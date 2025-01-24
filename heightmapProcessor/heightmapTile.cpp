@@ -1,6 +1,112 @@
 #include "heightmapTile.h"
+#include "pugixml.hpp"
+#include <iostream>
+#include <string>
+#include <cstdint>
+#include <algorithm>
+#include <cctype>
 
-heightmapTile(pugi::xml_document fromDoc);
+
+heightmapTile::heightmapTile( pugi::xml_document *fromDoc)
+{
+	parseAllNodes(fromDoc);
+}
+
+double longitudeFromString(std::string ofString)
+{
+	if (!ofString.empty())
+	{
+		return std::stod(ofString.substr(ofString.find(" "), ofString.length()));
+	}
+
+	return 0;
+}
+
+double latitudeFromString( std::string ofString )
+{
+	
+	if (!ofString.empty())
+	{
+		return std::stod( ofString.substr(0, ofString.find(" ") ) );
+	}
+
+
+	return 0;
+}
+
+uint16_t cleaned_char(std::string fromStr)
+{
+	std::stoul(fromStr.substr(fromStr.find(","), fromStr.length() ) );
+
+	return 0;
+}
+
+void loadTuples(pugi::xml_node fromNode)
+{
+	for (pugi::xml_node tPoint : fromNode.children())
+	{
+
+		std::cout << tPoint.value();
+	}
+}
+
+void heightmapTile::parseNodes(pugi::xml_node thisNode)
+{
+	int nameInd = 0;
+
+
+	for (std::string thisName : usedNames)
+	{
+		if (thisNode.name() == thisName)
+		{
+			/*std::cout << "Found " + thisName + "\n";
+			std::cout << "Index is " + std::to_string(nameInd);*/
+
+			switch (nameInd)
+			{
+				case 0: // The lower corner.
+					southWestLat = latitudeFromString(thisNode.first_child().value());
+					southWestLong = longitudeFromString(thisNode.first_child().value());
+					break;
+				case 1:
+					northEastLat = latitudeFromString(thisNode.first_child().value());
+					northEastLong = longitudeFromString(thisNode.first_child().value());
+					break;
+				case 2:
+					break;
+				case 5:
+					loadTuples(thisNode);
+					break;
+				default:
+					break;
+			}
+
+			break;
+		}
+
+		nameInd++;
+	}
+
+	if (thisNode.children().empty())
+	{
+		return;
+	}
+
+	for (pugi::xml_node tChild : thisNode.children())
+	{
+		// std::cout << tChild.name(); std::cout << "\n";
+		parseNodes(tChild);
+	}
+
+}
+
+void heightmapTile::parseAllNodes(pugi::xml_document* parsing)
+{
+	for (pugi::xml_node child : parsing->children())
+	{
+		parseNodes(child);
+	}
+}
 
 /*
 * This sets the upper right, North East corner of a tile.
