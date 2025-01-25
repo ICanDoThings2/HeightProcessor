@@ -157,9 +157,9 @@ void updateDirFiles()
                 {
                     std::cout << "Load good!\n";
                     heightmapTile tTile = heightmapTile( &tDoc );
+                    processedTiles.emplace_back(tTile);
                 }
 
-                break;
             }
         }
     }
@@ -244,14 +244,9 @@ void getCMD()
 
 int main()
 {
-
-
     std::cout << "Directory Not Set!\n";
 
     getCMD();
-
-
-
 }
 
 // Run program: Ctrl + F5 or Debug > Start Without Debugging menu

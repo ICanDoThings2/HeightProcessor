@@ -1,10 +1,14 @@
-#include "heightmapTile.h"
+﻿#include "heightmapTile.h"
 #include "pugixml.hpp"
 #include <iostream>
 #include <string>
 #include <cstdint>
 #include <algorithm>
 #include <cctype>
+#include <cstdint>
+#include <clocale>
+#include <cwctype>
+#include <chrono>
 
 
 heightmapTile::heightmapTile( pugi::xml_document *fromDoc)
@@ -36,18 +40,58 @@ double latitudeFromString( std::string ofString )
 
 uint16_t cleaned_char(std::string fromStr)
 {
-	std::stoul(fromStr.substr(fromStr.find(","), fromStr.length() ) );
+	int raw = 0;
 
-	return 0;
+	if (fromStr.size() == 0)
+	{
+		std::cout << "Nothing!?";
+	}
+
+	raw = std::round ( std::clamp(std::stod(fromStr), 0.0, 65535.0) );
+
+	if (raw > 0)
+	{
+		raw += 200; // To simulate above the continental shelf.
+	}
+
+	return raw;
+}
+
+bool isCharNumberUsed(char numberChar)
+{
+	return std::iswdigit(numberChar ) || numberChar == '-' || numberChar == '.';
 }
 
 void loadTuples(pugi::xml_node fromNode)
 {
-	for (pugi::xml_node tPoint : fromNode.children())
-	{
+	std::vector<uint16_t> rawData;
 
-		std::cout << tPoint.value();
+	std::string reading = fromNode.first_child().value();
+
+	std::string thisNum = "";
+
+	int maxNumber = rawData.max_size();
+
+	int done = 0;
+
+	for (char c : reading)
+	{
+		if (isCharNumberUsed(c))
+		{
+			thisNum += c;
+		}
+		else
+		{
+			if (thisNum.length() > 0)
+			{
+				rawData.push_back(cleaned_char(thisNum));
+			}
+			
+			thisNum = "";
+		}
 	}
+
+	std::cout << rawData.size();
 }
 
 void heightmapTile::parseNodes(pugi::xml_node thisNode)
@@ -75,7 +119,12 @@ void heightmapTile::parseNodes(pugi::xml_node thisNode)
 				case 2:
 					break;
 				case 5:
+					std::cout << "Tuples found";
 					loadTuples(thisNode);
+					break;
+				case 7: // We've reached the last point needed. We can adjust the rest of the file now.
+
+					std::cout << "Finished!";
 					break;
 				default:
 					break;
@@ -94,7 +143,6 @@ void heightmapTile::parseNodes(pugi::xml_node thisNode)
 
 	for (pugi::xml_node tChild : thisNode.children())
 	{
-		// std::cout << tChild.name(); std::cout << "\n";
 		parseNodes(tChild);
 	}
 

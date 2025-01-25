@@ -27,7 +27,7 @@ protected:
 	void parseNodes(pugi::xml_node thisNode);
 	void parseAllNodes(pugi::xml_document* parsing);
 
-	
+	bool eastMoving = true; bool southMoving = true;
 
 
 	/*
