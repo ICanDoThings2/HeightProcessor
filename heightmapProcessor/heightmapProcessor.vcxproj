@@ -129,11 +129,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="heightmapIsland.cpp" />
     <ClCompile Include="heightmapProcessor.cpp" />
     <ClCompile Include="heightmapTile.cpp" />
     <ClCompile Include="pugixml.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="heightmapIsland.h" />
     <ClInclude Include="heightmapProcessor.h" />
     <ClInclude Include="heightmapTile.h" />
     <ClInclude Include="pugiconfig.hpp" />

@@ -12,12 +12,13 @@
 #include <map>
 #include <vector>
 #include "heightmapTile.h"
+#include "heightmapIsland.h"
 
 pugi::xml_document baseDoc; 
 
 enum fileCmdEnums{ update, changeDir, info, invalid, quit, singleFileDir };
 
-std::filesystem::path curDir;
+static std::filesystem::path curDir;
 
 std::map<std::string, fileCmdEnums> stringToEnumCMD{ 
     {"update", fileCmdEnums::update}, 
@@ -127,6 +128,7 @@ std::string XMLCoordsCenter( std::filesystem::directory_entry )
     return Center;
 }
 
+
 /*
 Planned to update the current directory. 
 It should move single files from a folder up to their parent directory if they're the only ones present then delete said folder.
@@ -155,13 +157,33 @@ void updateDirFiles()
 
                 if (loadResult.status == pugi::status_ok)
                 {
-                    std::cout << "Load good!\n";
                     heightmapTile tTile = heightmapTile( &tDoc );
                     processedTiles.emplace_back(tTile);
+                    std::cout << processedTiles.size(); std::cout << "\n";
+                }
+
+                if (loadResult.status != pugi::status_ok)
+                {
+                    std::cout << "Error opening file "; std::cout << inCurDir.path(); std::cout << "\n";
                 }
 
             }
         }
+        std::cout << "All tiles loaded, total is "; std::cout << processedTiles.size(); std::cout << "\n";
+
+        heightmapTile baseRef = processedTiles.at(0);
+        
+        for (int n = 1; n < processedTiles.size(); n++) // Make sure all the files are formatted the same.
+        {
+            if ( !processedTiles.at(n).sameFormat(baseRef))
+            {
+                std::cout << "Discrepancy found!";
+                return; 
+            }
+        }
+
+        heightmapTile::addNeighbors(processedTiles);
+
     }
 }
 

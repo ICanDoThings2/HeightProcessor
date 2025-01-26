@@ -23,11 +23,28 @@ protected:
 		"gml:startPoint"
 	};
 
+	std::vector<uint16_t> rawData;
+	std::vector< std::vector<uint16_t> > sortedElevation;
+
+	int startX = 0, startY = 0;
+	int endX = 0, endY = 0;
+
+	void sortElevation();
+
+	void updateCorners();
 
 	void parseNodes(pugi::xml_node thisNode);
 	void parseAllNodes(pugi::xml_document* parsing);
+	void loadTuples(pugi::xml_node fromNode);
 
 	bool eastMoving = true; bool southMoving = true;
+
+	void setDirections(std::string fromStr);
+
+	void setLow(std::string fromStr);
+	void setEnd(std::string fromStr);
+
+	heightmapTile *southTile, *northTile, *westTile, *eastTile; // Neighboring non diagonal tiles. 
 
 
 	/*
@@ -37,29 +54,16 @@ protected:
 	double northEastLat, northEastLong;
 	double southWestLat, southWestLong;
 
-	/*
-	* These are neighboring tiles, non-diagonally.
-	*/
-
-	heightmapTile *westCell, *eastCell, *southCell, *northCell;
 
 public:
 
 	heightmapTile(pugi::xml_document *fromDoc);
 
+	bool sameFormat(heightmapTile toCompare);
+
 	void setNECorner(double asLat, double asLong);
 
-	/*
-	* This sets the lower left, Southwest Corner of a tile.
-	*/
-
-	void setSWCorner(double asLat, double asLong)
-	{
-
-	}
-
-	void setEastCell(heightmapTile* asEastCell);
-	void setWestCell(heightmapTile* asWestCell);
+	static void addNeighbors(std::vector<heightmapTile> allTiles);
 
 	double longitudeLength();
 	double latitudeLength();
@@ -67,8 +71,15 @@ public:
 	bool equalLongitude(heightmapTile* otherTile);
 	bool equalLatitude(heightmapTile* otherTile);
 
-	bool isWestOrEastBorder(heightmapTile* asNeighbor );
-	bool isNorthOrSouthBorder(heightmapTile* asNeighbor);
+	bool southNeighbor(heightmapTile* otherTile);
+	bool northNeighbor(heightmapTile* otherTile);
+	bool westNeighbor(heightmapTile* otherTile);
+	bool eastNeighbor(heightmapTile* otherTile);
+
+	enum borderDir { invalid, north, south, east, west };
+	borderDir neighborDir(heightmapTile* ourNeighbor);
+
+	double westLong(), eastLong(), northLat(), southLat();
 
 
 };

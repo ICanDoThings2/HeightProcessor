@@ -57,14 +57,38 @@ uint16_t cleaned_char(std::string fromStr)
 	return raw;
 }
 
+void heightmapTile::setLow(std::string fromStr)
+{
+	if (!fromStr.empty())
+	{
+		startX = std::stoi( fromStr.substr(0, fromStr.find(" ")) );
+		startY = std::stoi(fromStr.substr(fromStr.find(" "), fromStr.length()));
+	}
+}
+
+void heightmapTile::setEnd(std::string fromStr)
+{
+	if (!fromStr.empty())
+	{
+		endX = std::stoi( fromStr.substr(0, fromStr.find(" ")) );
+		endY = std::stoi(fromStr.substr(fromStr.find(" "), fromStr.length()));
+	}
+}
+
 bool isCharNumberUsed(char numberChar)
 {
 	return std::iswdigit(numberChar ) || numberChar == '-' || numberChar == '.';
 }
 
-void loadTuples(pugi::xml_node fromNode)
+void heightmapTile::sortElevation()
 {
-	std::vector<uint16_t> rawData;
+	int perRow = endX - startX + 1;
+
+	std::cout << rawData.size() / perRow;
+}
+
+void heightmapTile::loadTuples(pugi::xml_node fromNode)
+{
 
 	std::string reading = fromNode.first_child().value();
 
@@ -91,7 +115,48 @@ void loadTuples(pugi::xml_node fromNode)
 		}
 	}
 
-	std::cout << rawData.size();
+	sortElevation();
+}
+
+void heightmapTile::setDirections(std::string fromStr) 
+{
+	// eastMoving = true; bool southMoving;
+
+	char signA = fromStr.at(0);
+	char signB = fromStr.at(2);
+
+	if (signA == '+')
+	{
+		eastMoving = true;
+	}
+	if (signA == '-')
+	{
+		eastMoving = false;
+	}
+
+	if (signA != '-' || signB != '+')
+	{
+		std::cout << "Alarm! Unknown direction setting! Char is " + signA; std::cout << "\n";
+	}
+
+	if (signB == '+')
+	{
+		eastMoving = southMoving = false;
+	}
+	if (signB == '-')
+	{
+		southMoving = true;
+	}
+
+	if (signB != '-' || signB != '+')
+	{
+		std::cout << "Alarm! Unknown direction setting! Char is " + signB; std::cout << "\n";
+	}
+}
+
+void heightmapTile::updateCorners()
+{
+
 }
 
 void heightmapTile::parseNodes(pugi::xml_node thisNode)
@@ -115,16 +180,22 @@ void heightmapTile::parseNodes(pugi::xml_node thisNode)
 				case 1:
 					northEastLat = latitudeFromString(thisNode.first_child().value());
 					northEastLong = longitudeFromString(thisNode.first_child().value());
+					updateCorners();
 					break;
 				case 2:
+					setLow( thisNode.first_child().value() );
+					break;
+				case 3:
+					setEnd( thisNode.first_child().value());
 					break;
 				case 5:
-					std::cout << "Tuples found";
 					loadTuples(thisNode);
 					break;
-				case 7: // We've reached the last point needed. We can adjust the rest of the file now.
+				case 6:
+					setDirections(thisNode.first_attribute().value());
+					break;
 
-					std::cout << "Finished!";
+				case 7: // We've reached the last point needed. We can adjust the rest of the file now.
 					break;
 				default:
 					break;
@@ -154,6 +225,100 @@ void heightmapTile::parseAllNodes(pugi::xml_document* parsing)
 	{
 		parseNodes(child);
 	}
+}
+
+bool heightmapTile::sameFormat(heightmapTile toCompare)
+{
+	std::vector<bool> comparisons; 
+	comparisons.emplace_back(eastMoving == toCompare.eastMoving);
+	comparisons.emplace_back(southMoving == toCompare.southMoving);
+	comparisons.emplace_back(startX == toCompare.startX && startY == toCompare.startY);
+	comparisons.emplace_back(endX == toCompare.endX && endY == toCompare.endY);
+
+	for (bool checking : comparisons)
+	{
+		if (checking == false)
+		{
+			return false;
+		}
+	}
+
+	return true;
+}
+
+
+/*
+This is a recursive function that is meant to iterate a tile with a given set of unconnected tiles and find connections, and return eventually a list
+of totally unconnected to the first tile for the purpose of generating islands. 
+*/
+
+void heightmapTile::addNeighbors(std::vector<heightmapTile> allTiles)
+{
+
+	int runs = 0;
+
+	for (heightmapTile hTile : allTiles)
+	{
+		for (heightmapTile altTile : allTiles)
+		{
+			if (&altTile == &hTile) // Same guy. No point.
+			{
+				continue;
+			}
+
+			runs++;
+
+			switch ( hTile.neighborDir( &altTile ) )
+			{
+				case invalid:
+					continue;
+
+				case north:
+					hTile.northTile = &altTile;
+					continue;
+
+				case south:
+					hTile.southTile = &altTile;
+					continue;
+
+				case east:
+					hTile.eastTile = &altTile;
+					continue;
+
+				case west:
+					hTile.westTile = &altTile;
+					continue;
+			}
+		}
+
+	}
+
+	std::cout << "Looked at neighbors "; std::cout << runs; std::cout << " times\n";
+}
+
+heightmapTile::borderDir heightmapTile::neighborDir(heightmapTile* ourNeighbor)
+{
+	if (southNeighbor(ourNeighbor) )
+	{
+		return heightmapTile::south;
+	}
+
+	if (northNeighbor(ourNeighbor))
+	{
+		return heightmapTile::north;
+	}
+
+	if (eastNeighbor(ourNeighbor))
+	{
+		return heightmapTile::east;
+	}
+
+	if (westNeighbor(ourNeighbor))
+	{
+		return heightmapTile::west;
+	}
+
+	return heightmapTile::invalid;
 }
 
 /*
@@ -194,47 +359,55 @@ bool heightmapTile::equalLongitude(heightmapTile* altTile)
 	return ( this->longitudeLength() == altTile->longitudeLength() );
 }
 
-/*
-* This function checks if a heightmapTile is adjacent to another, by latitude.
-* If they have the same latitudes for both corners, then they would be the same distance.
-*/
-
-bool heightmapTile::isWestOrEastBorder( heightmapTile* asNeighbor )
+bool heightmapTile::southNeighbor(heightmapTile* neighbor)
 {
-	return ( this->northEastLat == asNeighbor->northEastLat &&
-		this->southWestLat == asNeighbor->southWestLat &&
-		this->southWestLong == asNeighbor->northEastLong ||
-		this->northEastLong == asNeighbor->southWestLong);
+	return southLat() == neighbor->northLat() &&
+		northEastLong == neighbor->northEastLong ||
+		southWestLong == neighbor->southWestLong;
+
 }
 
-/*
-* This function checks if a heightmapTile is adjacent to another, by longitude.
-* 
-*/
-
-bool heightmapTile::isNorthOrSouthBorder(heightmapTile* asNeighbor)
+bool heightmapTile::northNeighbor(heightmapTile* neighbor)
 {
-	return ( this->northEastLong == asNeighbor->northEastLong );
+	return northLat() == neighbor->southLat() &&
+		northEastLong == neighbor->northEastLong ||
+		southWestLong == neighbor->southWestLong;
+
 }
 
-void heightmapTile::setEastCell(heightmapTile* asEastCell)
+bool heightmapTile::eastNeighbor(heightmapTile* neighbor)
 {
-	if (asEastCell != nullptr) // Make sure it's real.
-	{
-		if ( this->isWestOrEastBorder( asEastCell ) ) // Make sure their borders are equal.
-		{
-			this->eastCell = asEastCell;
-			asEastCell->westCell = this; // Set us to be their neighbor too.
-		}
+	return eastLong() == neighbor->westLong() &&
+		northEastLat == neighbor->northEastLat ||
+		southWestLat == neighbor->southWestLat;
 
-		return; 
-	}
 }
 
-void heightmapTile::setWestCell(heightmapTile* asWestCell)
+bool heightmapTile::westNeighbor(heightmapTile* neighbor)
 {
-	if (asWestCell != nullptr) // Make sure it's real.
-	{
-		westCell = asWestCell;
-	}
+	return westLong() == neighbor->eastLong() &&
+		northEastLat == neighbor->northEastLat ||
+		southWestLat == neighbor->southWestLat;
+
+}
+
+
+double heightmapTile::westLong()
+{
+	return southWestLong;
+}
+
+double heightmapTile::eastLong()
+{
+	return northEastLong;
+}
+
+double heightmapTile::northLat()
+{
+	return northEastLat;
+}
+
+double heightmapTile::southLat()
+{
+	return southWestLat;
 }
