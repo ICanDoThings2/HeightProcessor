@@ -1,13 +1,42 @@
 #include "heightmapIsland.h"
 #include <vector>
 #include "heightmapTile.h"
+#include <iostream>
 
-heightmapIsland::heightmapIsland(heightmapTile fromTile)
+heightmapIsland::heightmapIsland(std::vector<heightmapTile> tileGroup)
 {
-	linkedTiles.emplace_back(fromTile);
+
 }
 
+std::vector<heightmapIsland> heightmapIsland::islandsFromTiles(std::vector<heightmapTile> usedTiles)
+{
+	std::vector<std::vector<heightmapTile>> islands;
+	std::vector<heightmapIsland> sorted;
 
+	if (islands.size() == 0) // If it's nothing we'll go ahead and make our first island.
+	{
+		islands.emplace_back ( usedTiles.at(0).allConnected( std::vector<heightmapTile> {usedTiles.at(0) }) );
+	}
+
+	for (heightmapTile checkingTile : usedTiles )
+	{
+
+		for (std::vector<heightmapTile> thisIsland : islands)
+		{
+			/*if (heightmapTile::vectorContains(thisIsland, checkingTile)) // This checks current islands to see if it is in any. 
+			{
+				break; continue; // We found it among the islands so we can get back to checking other tiles.
+			}*/
+		}
+
+		islands.emplace_back(checkingTile.allConnected(std::vector<heightmapTile> {checkingTile}));
+
+	}
+
+	std::cout << "\n there are "; std::cout << islands.size(); std::cout << " islands.\n";
+
+	return sorted;
+}
 
 void heightmapIsland::outputHeightmapIslandImage()
 {

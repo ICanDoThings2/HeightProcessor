@@ -4,7 +4,7 @@
 #include <cmath>
 #include "pugixml.hpp"
 #include <vector>
-#include <cstdint>
+
 
 class heightmapTile
 {
@@ -57,16 +57,23 @@ protected:
 
 public:
 
+	
+
+
 	heightmapTile(pugi::xml_document *fromDoc);
 
 	bool sameFormat(heightmapTile toCompare);
 
 	void setNECorner(double asLat, double asLong);
 
-	static void addNeighbors(std::vector<heightmapTile> allTiles);
+	void addNeighbors(std::vector<heightmapTile>& allTiles);
+
+	std::vector<heightmapTile> allConnected(std::vector<heightmapTile> currentKnown);
 
 	double longitudeLength();
 	double latitudeLength();
+
+	bool inVector(std::vector<heightmapTile> list);
 
 	bool equalLongitude(heightmapTile* otherTile);
 	bool equalLatitude(heightmapTile* otherTile);
@@ -76,10 +83,17 @@ public:
 	bool westNeighbor(heightmapTile* otherTile);
 	bool eastNeighbor(heightmapTile* otherTile);
 
+	
+
 	enum borderDir { invalid, north, south, east, west };
 	borderDir neighborDir(heightmapTile* ourNeighbor);
 
+	static borderDir dirInt(int asNum);
+	heightmapTile currentNeighbor(borderDir toDir);
+
 	double westLong(), eastLong(), northLat(), southLat();
+
+
 
 
 };

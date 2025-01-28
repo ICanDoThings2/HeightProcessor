@@ -8,7 +8,7 @@
 #include <iostream>
 #include <string>
 #include <filesystem>
-#include <algorithm>
+
 #include <map>
 #include <vector>
 #include "heightmapTile.h"
@@ -129,6 +129,12 @@ std::string XMLCoordsCenter( std::filesystem::directory_entry )
 }
 
 
+void passByRefTest(std::vector<heightmapTile>& ourRef)
+{
+
+}
+
+
 /*
 Planned to update the current directory. 
 It should move single files from a folder up to their parent directory if they're the only ones present then delete said folder.
@@ -158,7 +164,7 @@ void updateDirFiles()
                 if (loadResult.status == pugi::status_ok)
                 {
                     heightmapTile tTile = heightmapTile( &tDoc );
-                    processedTiles.emplace_back(tTile);
+                    processedTiles.emplace_back( &tTile);
                     std::cout << processedTiles.size(); std::cout << "\n";
                 }
 
@@ -182,7 +188,23 @@ void updateDirFiles()
             }
         }
 
-        heightmapTile::addNeighbors(processedTiles);
+        for (heightmapTile tTile : processedTiles)
+        {
+            tTile.addNeighbors(processedTiles);
+        }
+
+        for (heightmapTile tTile : processedTiles)
+        {
+            for (int i = 1; i < 5; i++)
+            {
+                heightmapTile ourNeighbor = tTile.currentNeighbor(static_cast<heightmapTile::borderDir> (i));
+            }
+        }
+
+        std::cout << "Sum of connected tiles is: "; std::cout << processedTiles.at(0).allConnected({ processedTiles.at(0) }).size();
+
+        // heightmapIsland::islandsFromTiles(processedTiles);
+
 
     }
 }
