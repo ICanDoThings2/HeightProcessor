@@ -1,22 +1,23 @@
 #pragma once
-
-#include <vector>
 #include "heightmapTile.h"
+#include <list>
 
 class heightmapIsland
 {
 
 protected:
-	std::vector<heightmapTile> linkedTiles;
+	int maxX = 0, maxY = 0;
+
+	int tileWidth, tileHeight;
+
+	double westLong, eastLong;
+	double northLat, southLat;
+
+	std::list<heightmapTile> insideTiles;
 
 public:
+	heightmapIsland(std::list<heightmapTile> usedList);
+	heightmapIsland();
 
-	heightmapIsland(std::vector<heightmapTile> tileGroup);
-
-	static std::vector<heightmapIsland> islandsFromTiles( std::vector<heightmapTile> );
-
-	std::vector<heightmapTile> getLinkedTiles();
-	void outputHeightmapIslandImage();
 
 };
-

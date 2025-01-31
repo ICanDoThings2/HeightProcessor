@@ -8,11 +8,12 @@
 #include <iostream>
 #include <string>
 #include <filesystem>
-
 #include <map>
 #include <vector>
 #include "heightmapTile.h"
 #include "heightmapIsland.h"
+#include <list>
+
 
 pugi::xml_document baseDoc; 
 
@@ -146,8 +147,7 @@ void updateDirFiles()
 {
     int numFolders = 0;
 
-    std::vector<heightmapTile> processedTiles; 
-   
+    std::list<heightmapTile> tiles;
 
     if (std::filesystem::exists(curDir) && !curDir.empty())
     {
@@ -164,8 +164,7 @@ void updateDirFiles()
                 if (loadResult.status == pugi::status_ok)
                 {
                     heightmapTile tTile = heightmapTile( &tDoc );
-                    processedTiles.emplace_back( &tTile);
-                    std::cout << processedTiles.size(); std::cout << "\n";
+                    tiles.emplace_back(tTile);
                 }
 
                 if (loadResult.status != pugi::status_ok)
@@ -175,35 +174,31 @@ void updateDirFiles()
 
             }
         }
-        std::cout << "All tiles loaded, total is "; std::cout << processedTiles.size(); std::cout << "\n";
 
-        heightmapTile baseRef = processedTiles.at(0);
+        std::cout << "Load complete. ";  std::cout << tiles.size(); std::cout << " were processed.\n";
+
+        // heightmapTile* baseRef = tiles.at(0).get();// processedTiles.at(0);
+
+        heightmapTile &baseRef = tiles.front();
         
-        for (int n = 1; n < processedTiles.size(); n++) // Make sure all the files are formatted the same.
+        for ( heightmapTile &aTile : tiles) // Make sure all the files are formatted the same.
         {
-            if ( !processedTiles.at(n).sameFormat(baseRef))
+            if (!aTile.sameFormat(baseRef))
             {
                 std::cout << "Discrepancy found!";
                 return; 
             }
+
+            aTile.findNeighbors( tiles ); // Find our neighbors
         }
 
-        for (heightmapTile tTile : processedTiles)
-        {
-            tTile.addNeighbors(processedTiles);
-        }
+        std::cout << "Done!\n";
 
-        for (heightmapTile tTile : processedTiles)
-        {
-            for (int i = 1; i < 5; i++)
-            {
-                heightmapTile ourNeighbor = tTile.currentNeighbor(static_cast<heightmapTile::borderDir> (i));
-            }
-        }
+        // std::list<heightmapTile> firstIslandTiles; 
 
-        std::cout << "Sum of connected tiles is: "; std::cout << processedTiles.at(0).allConnected({ processedTiles.at(0) }).size();
+        heightmapIsland islandHandler = heightmapIsland(tiles); // = heightmapIsland::heightmapIsland(tiles);
 
-        // heightmapIsland::islandsFromTiles(processedTiles);
+        // std::cout << "There are "; std::cout << baseRef.allConnected( firstIslandTiles ).size(); std::cout << " tiles connected to first";
 
 
     }

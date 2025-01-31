@@ -1,12 +1,9 @@
 ﻿#include "heightmapTile.h"
-#include "heightmapIsland.h"
 #include "pugixml.hpp"
 #include <iostream>
 #include <string>
 #include <cstdint>
-
 #include <cctype>
-
 #include <clocale>
 #include <cwctype>
 #include <chrono>
@@ -15,7 +12,6 @@
 
 heightmapTile::heightmapTile( pugi::xml_document *fromDoc)
 {
-
 	parseAllNodes(fromDoc);
 }
 
@@ -25,6 +21,33 @@ bool operator==(heightmapTile A, heightmapTile B)
 		A.northLat() == B.northLat() &&
 		A.westLong() == B.westLong() &&
 		A.eastLong() == B.eastLong();
+}
+
+bool heightmapTile::empty()
+{
+	return rawData.size() == 0;
+}
+
+std::pair<int, int> heightmapTile::newCoord(borderDir fromDir)
+{
+	switch (fromDir)
+	{
+		case invalid:
+			return islandPosition;
+
+		case north:
+			return std::pair<int, int>{islandPosition.first, islandPosition.second + 1};
+
+		case south:
+			return std::pair<int, int>{islandPosition.first, islandPosition.second - 1};
+
+		case east:
+			return std::pair<int, int>{islandPosition.first + 1, islandPosition.second};
+
+		case west:
+			return std::pair<int, int>{islandPosition.first - 1, islandPosition.second};
+	}
+
 }
 
 double longitudeFromString(std::string ofString)
@@ -121,7 +144,7 @@ void heightmapTile::loadTuples(pugi::xml_node fromNode)
 			{
 				rawData.push_back(cleaned_char(thisNum));
 			}
-			
+
 			thisNum = "";
 		}
 	}
@@ -129,7 +152,7 @@ void heightmapTile::loadTuples(pugi::xml_node fromNode)
 	sortElevation();
 }
 
-void heightmapTile::setDirections(std::string fromStr) 
+void heightmapTile::setDirections(std::string fromStr)
 {
 	// eastMoving = true; bool southMoving;
 
@@ -159,21 +182,18 @@ void heightmapTile::setDirections(std::string fromStr)
 		southMoving = true;
 	}
 
-	if ( (signB != '-') || ( signB != '+' ) )
+	if ((signB != '-') || (signB != '+'))
 	{
 		std::cout << "Alarm! Unknown direction setting! Char is " + signB; std::cout << "\n";
 	}
 }
 
 
-bool heightmapTile::inVector(std::vector<heightmapTile> list)
+bool heightmapTile::inList(std::list<heightmapTile>& list)
 {
 
-	auto found = std::find(list.begin(), list.end(), *this);
-
-	bool end ( found != list.end() );
-
-	return end;
+	auto result = std::find(list.begin(), list.end(), *this);
+	return (result != list.end());
 }
 
 heightmapTile::borderDir heightmapTile::dirInt(int asNum)
@@ -181,37 +201,32 @@ heightmapTile::borderDir heightmapTile::dirInt(int asNum)
 	return static_cast<heightmapTile::borderDir>(asNum);
 }
 
-std::vector<heightmapTile> heightmapTile::allConnected(std::vector<heightmapTile> currentKnown)
+std::list<heightmapTile> heightmapTile::allConnected(std::list<heightmapTile>& currentKnown, std::pair<int, int> newPosition )
 {
 
-	std::vector<heightmapTile> uncheckedTiles;
+	islandPosition = newPosition;
 
-	if ( !inVector(currentKnown) ) // We're not within the list of connected tiles.
+	if (!inList(currentKnown))
 	{
 		currentKnown.emplace_back(*this);
-		// std::cout << "We weren't in";
+		
 	}
 
-	uncheckedTiles.emplace_back( *this);
-
-	while (uncheckedTiles.size() > 0)
+	for (int n = 1; n < 5; n++)
 	{
-		for (int s = 1; s < 5; s++)
+		heightmapTile neighbor = currentNeighbor(dirInt(n));
+
+		if ( neighbor == nullptr || neighbor.empty() )
 		{
-			heightmapTile thisNeighbor = uncheckedTiles.at(0).currentNeighbor(dirInt(s));
-
-			if (thisNeighbor == nullptr) { continue;  }
-
-			if ( !thisNeighbor.inVector(currentKnown) )
-			{
-				uncheckedTiles.emplace_back( thisNeighbor );
-				currentKnown.emplace_back(thisNeighbor);
-			}
+			continue;
+			// Null;
 		}
 
-		uncheckedTiles.erase(uncheckedTiles.begin());
+		if ( !neighbor.inList(currentKnown ) )
+		{
+			currentKnown = neighbor.allConnected(currentKnown, newCoord(dirInt(n) ) );
+		}
 	}
-
 
 	return currentKnown;
 }
@@ -287,6 +302,18 @@ void heightmapTile::parseAllNodes(pugi::xml_document* parsing)
 	}
 }
 
+void heightmapTile::sortListToIslands(std::list<heightmapTile> &fromList)
+{
+	std::list<heightmapTile> unsorted = fromList;
+
+	std::list<heightmapTile> nextIsland;
+
+	while (unsorted.size() > 0)
+	{
+		// nextIsland = unsorted.front().allConnected( fromList );
+	}
+}
+
 bool heightmapTile::sameFormat(heightmapTile toCompare)
 {
 	std::vector<bool> comparisons; 
@@ -342,48 +369,69 @@ heightmapTile heightmapTile::currentNeighbor(heightmapTile::borderDir toDir)
 	return nullptr;
 }
 
+bool heightmapTile::allNeighborsSet()
+{
+	return eastTile != nullptr &&
+		westTile != nullptr &&
+		southTile != nullptr &&
+		northTile != nullptr;
+}
+
 /*
 This is a function that is meant to iterate a tile with a given set of unconnected tiles and find connections, and return eventually a list
 of totally unconnected to the first tile for the purpose of generating islands. 
 */
 
-void heightmapTile::addNeighbors(std::vector<heightmapTile>& allTiles)
+void heightmapTile::findNeighbors(std::list<heightmapTile> &ofAll)
 {
-	int runs = 0;
 
-	for (heightmapTile altTile : allTiles)
+	if (allNeighborsSet())
 	{
-		if ( &altTile == this) // Same guy. No point.
+		return; // We've found all so no need for this. Makes things slightly faster, probably more so the greater the list of all tiles.
+	}
+
+	for (heightmapTile &thisTile : ofAll)
+	{
+		if (&thisTile == this)
 		{
-			std::cout << "Skipping!\n";
 			continue;
 		}
 
-		switch ( neighborDir( &altTile ) )
+		for (int way = 1; way < 5; way++)
 		{
+			switch (neighborDir( &thisTile))
+			{
+				case north:
+					this->northTile = &thisTile;
+					thisTile.southTile = this;
+					continue;
 
-			case north:
-				northTile = &altTile; std::cout << "N Neighbor";
-				continue;
+				case south:
+					this->southTile = &thisTile;
+					thisTile.northTile = this;
+					continue;
 
-			case south:
-				southTile = &altTile; std::cout << "S neighbor";
-				continue;
+				case east:
+					this->eastTile = &thisTile;
+					thisTile.westTile = this;
+					continue;
 
-			case east:
-				eastTile = &altTile; std::cout << "E neighbor";
-				continue;
+				case west:
+					this->westTile = &thisTile;
+					thisTile.eastTile = this;
+					continue;
+			}
 
-			case west:
-				westTile = &altTile; std::cout << "W neighbor";
-				continue;
+			if (allNeighborsSet())
+			{
+				return; // We've found all so no need for this. Makes things slightly faster, probably more so the greater the list of all tiles.
+			}
 
 		}
 	}
-	
 }
 
-heightmapTile::borderDir heightmapTile::neighborDir(heightmapTile* ourNeighbor)
+heightmapTile::borderDir heightmapTile::neighborDir(heightmapTile *ourNeighbor)
 {
 	if (southNeighbor(ourNeighbor) )
 	{
@@ -498,3 +546,4 @@ double heightmapTile::southLat()
 {
 	return southWestLat;
 }
+

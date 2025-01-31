@@ -4,6 +4,8 @@
 #include <cmath>
 #include "pugixml.hpp"
 #include <vector>
+#include <memory>
+#include <list>
 
 
 class heightmapTile
@@ -38,14 +40,16 @@ protected:
 	void loadTuples(pugi::xml_node fromNode);
 
 	bool eastMoving = true; bool southMoving = true;
+	bool positiionSet = false;
 
 	void setDirections(std::string fromStr);
 
 	void setLow(std::string fromStr);
 	void setEnd(std::string fromStr);
 
-	heightmapTile *southTile, *northTile, *westTile, *eastTile; // Neighboring non diagonal tiles. 
+	heightmapTile *southTile = nullptr, *northTile = nullptr, *westTile = nullptr, *eastTile = nullptr; // Neighboring non diagonal tiles. 
 
+	std::pair<int, int> islandPosition;
 
 	/*
 	* These two coordinate pairs are for the Southewest and Northest corners of a map, respectively.
@@ -64,16 +68,20 @@ public:
 
 	bool sameFormat(heightmapTile toCompare);
 
+	bool empty();
+
 	void setNECorner(double asLat, double asLong);
 
-	void addNeighbors(std::vector<heightmapTile>& allTiles);
+	bool allNeighborsSet();
+	void findNeighbors(std::list<heightmapTile>& fromAll);
 
-	std::vector<heightmapTile> allConnected(std::vector<heightmapTile> currentKnown);
+
+	
 
 	double longitudeLength();
 	double latitudeLength();
 
-	bool inVector(std::vector<heightmapTile> list);
+	bool inList(std::list<heightmapTile>& list);
 
 	bool equalLongitude(heightmapTile* otherTile);
 	bool equalLatitude(heightmapTile* otherTile);
@@ -88,13 +96,15 @@ public:
 	enum borderDir { invalid, north, south, east, west };
 	borderDir neighborDir(heightmapTile* ourNeighbor);
 
+	std::pair<int, int> newCoord(borderDir fromDir);
 	static borderDir dirInt(int asNum);
 	heightmapTile currentNeighbor(borderDir toDir);
 
 	double westLong(), eastLong(), northLat(), southLat();
 
+	std::list<heightmapTile> allConnected(std::list<heightmapTile>& allTiles, std::pair<int, int> newPos);
 
-
+	void sortListToIslands( std::list<heightmapTile> &fromList );
 
 };
 
