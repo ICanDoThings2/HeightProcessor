@@ -285,6 +285,15 @@ int main()
 {
     std::cout << "Directory Not Set!\n";
 
+    uint16_t testNum = 60000;
+
+    uint8_t red, green;
+
+    red = heightmapIsland::redFromHeight(testNum);
+    green = heightmapIsland::greenFromHeight(testNum);
+
+    heightmapIsland::generateTest();
+
     getCMD();
 }
 

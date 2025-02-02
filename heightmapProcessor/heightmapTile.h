@@ -62,7 +62,7 @@ protected:
 public:
 
 	
-
+	std::vector<uint16_t> getRaw();
 
 	heightmapTile(pugi::xml_document *fromDoc);
 
@@ -75,8 +75,7 @@ public:
 	bool allNeighborsSet();
 	void findNeighbors(std::list<heightmapTile>& fromAll);
 
-
-	
+	std::pair<int, int> getPosition();
 
 	double longitudeLength();
 	double latitudeLength();

@@ -2,6 +2,10 @@
 #include "heightmapTile.h"
 #include <list>
 
+
+
+// using namespace cv;
+
 class heightmapIsland
 {
 
@@ -13,11 +17,17 @@ protected:
 	double westLong, eastLong;
 	double northLat, southLat;
 
-	std::list<heightmapTile> insideTiles;
+	std::list<heightmapTile> tiles;
 
 public:
 	heightmapIsland(std::list<heightmapTile> usedList);
-	heightmapIsland();
+	// heightmapIsland();
 
+	void generateImage();
+
+	static void generateTest();
+
+	static uint8_t greenFromHeight(uint16_t heightValue);
+	static uint8_t redFromHeight(uint16_t heightValue);
 
 };

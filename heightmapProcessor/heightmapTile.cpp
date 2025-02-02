@@ -231,6 +231,16 @@ std::list<heightmapTile> heightmapTile::allConnected(std::list<heightmapTile>& c
 	return currentKnown;
 }
 
+std::vector<uint16_t> heightmapTile::getRaw()
+{
+	return rawData;
+}
+
+std::pair<int, int> heightmapTile::getPosition()
+{
+	return islandPosition;
+}
+
 void heightmapTile::parseNodes(pugi::xml_node thisNode)
 {
 	int nameInd = 0;
