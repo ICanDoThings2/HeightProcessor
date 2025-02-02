@@ -15,7 +15,23 @@ heightmapTile::heightmapTile( pugi::xml_document *fromDoc)
 	parseAllNodes(fromDoc);
 }
 
-bool operator==(heightmapTile A, heightmapTile B)
+
+std::list<heightmapTile> heightmapTile::trimmedList(std::list<heightmapTile> from, std::list<heightmapTile> removing)
+{
+	for (heightmapTile cutting : removing )
+	{
+		auto found = std::find(from.begin(), from.end(), cutting);
+		
+		if (found != from.end())
+		{
+			from.erase(found);
+		}
+	}
+
+	return from;
+}
+
+static bool operator==(heightmapTile A, heightmapTile B)
 {
 	return A.southLat() == B.southLat() &&
 		A.northLat() == B.northLat() &&
@@ -188,6 +204,13 @@ void heightmapTile::setDirections(std::string fromStr)
 	}
 }
 
+bool heightmapTile::sameTile(heightmapTile otherTile)
+{
+	return southLat() == otherTile.southLat() &&
+		northLat() == otherTile.northLat() &&
+		westLong() == otherTile.westLong() &&
+		eastLong() == otherTile.eastLong();
+}
 
 bool heightmapTile::inList(std::list<heightmapTile>& list)
 {

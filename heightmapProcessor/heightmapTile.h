@@ -61,6 +61,9 @@ protected:
 
 public:
 
+	static std::list<heightmapTile> trimmedList(std::list<heightmapTile> from, std::list<heightmapTile> removing);
+
+	bool sameTile(heightmapTile otherTile);
 	
 	std::vector<uint16_t> getRaw();
 

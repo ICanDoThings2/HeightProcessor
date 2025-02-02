@@ -19,9 +19,21 @@ protected:
 
 	std::list<heightmapTile> tiles;
 
+	struct
+	{
+		std::pair<int, int> lowest;
+		std::pair<int, int> highest;
+		std::pair<int, int> resolution;
+		double west, east, north, south;
+
+	} islandSpecs;
+
+
 public:
+	heightmapIsland();
 	heightmapIsland(std::list<heightmapTile> usedList);
-	// heightmapIsland();
+	
+	std::string imageName();
 
 	void generateImage();
 
@@ -29,5 +41,7 @@ public:
 
 	static uint8_t greenFromHeight(uint16_t heightValue);
 	static uint8_t redFromHeight(uint16_t heightValue);
+
+	void updateSpecs();
 
 };
